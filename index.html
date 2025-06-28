@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Custom Interval Timer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+
+    #timer {
+      font-size: 64px;
+      font-weight: bold;
+      margin: 30px 0;
+      color: #333;
+    }
+
+    input, button {
+      font-size: 24px;
+      padding: 10px 15px;
+      margin: 10px;
+      width: 90%;
+      max-width: 400px;
+      box-sizing: border-box;
+    }
+
+    input[type="text"], input[type="number"] {
+      text-align: center;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    @media (min-width: 500px) {
+      button, input {
+        font-size: 20px;
+        width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1 id="timer">0:00</h1>
+
+  <div>
+    <input type="text" id="intervalDurationsInput" value="3,2,4" placeholder="Interval durations (min, comma-separated)">
+    <br>
+    <input type="number" id="restDuration" value="0" min="0" placeholder="Rest duration (minutes)">
+    <br><br>
+    
+    <button onclick="startTimer()">Start</button>
+    <button onclick="pauseTimer()">Pause</button>
+    <button onclick="resetTimer()">Reset</button>
+    <button onclick="editTimer()">Edit</button>
+    <button onclick="testSpeech()">Test Speech</button>
+  </div>
+
+  <script>
+    speechSynthesis.onvoiceschanged = () => {}; // ensure voices are loaded
+
+    let countdown;
+    let isRunning = false;
+
+    let intervalDurations = [180, 120, 240]; // in seconds
+    let restDuration = 0; // in seconds
+
+    let currentInterval = 0;
+    let inRest = false;
+    let timeLeft = 0;
+
+    const timerDisplay = document.getElementById('timer');
+    const intervalDurationsInput = document.getElementById('intervalDurationsInput');
+    const restDurationInput = document.getElementById('restDuration');
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function speak(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = speechSynthesis.getVoices();
+
+      const femaleVoice = voices.find(voice =>
+        voice.name.toLowerCase().includes('female') ||
+        voice.name.toLowerCase().includes('woman') ||
+        voice.gender === 'female' ||
+        voice.name.toLowerCase().includes('zira') ||
+        voice.name.toLowerCase().includes('samantha') ||
+        voice.name.toLowerCase().includes('google us english')
+      );
+
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
+      }
+
+      speechSynthesis.speak(utterance);
+    }
+
+    function startTimer() {
+      if (isRunning) return;
+      isRunning = true;
+
+      if (timeLeft === 0) {
+        currentInterval = 0;
+        inRest = false;
+        timeLeft = intervalDurations[currentInterval];
+        speak(`Interval ${currentInterval + 1} started`);
+      }
+
+      countdown = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+
+        if (timeLeft === 0) {
+          clearInterval(countdown);
+          isRunning = false;
+
+          if (!inRest && restDuration > 0) {
+            inRest = true;
+            timeLeft = restDuration;
+            speak('Rest time!');
+            startTimer();
+          } else {
+            if (currentInterval + 1 < intervalDurations.length) {
+              currentInterval++;
+              inRest = false;
+              timeLeft = intervalDurations[currentInterval];
+              speak(`Interval ${currentInterval + 1} started`);
+              startTimer();
+            } else {
+              speak('All intervals completed!');
+            }
+          }
+        }
+      }, 1000);
+
+      updateTimerDisplay();
+    }
+
+    function pauseTimer() {
+      clearInterval(countdown);
+      isRunning = false;
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      currentInterval = 0;
+      inRest = false;
+      timeLeft = 0;
+      updateTimerDisplay();
+    }
+
+    function editTimer() {
+      const rawDurations = intervalDurationsInput.value.split(',').map(s => parseFloat(s.trim()));
+      const newRest = parseFloat(restDurationInput.value);
+
+      if (
+        rawDurations.length === 0 ||
+        rawDurations.some(d => isNaN(d) || d <= 0) ||
+        isNaN(newRest) || newRest < 0
+      ) {
+        alert("Please enter valid durations.");
+        return;
+      }
+
+      pauseTimer();
+      intervalDurations = rawDurations.map(d => d * 60); // convert to seconds
+      restDuration = newRest * 60;
+      currentInterval = 0;
+      inRest = false;
+      timeLeft = 0;
+      updateTimerDisplay();
+    }
+
+    function testSpeech() {
+      speak('Interval 1 started');
+      setTimeout(() => speak('Rest time!'), 1500);
+      setTimeout(() => speak('Interval 2 started'), 3000);
+      setTimeout(() => speak('All intervals completed!'), 4500);
+    }
+
+    updateTimerDisplay();
+  </script>
+</body>
+</html>
