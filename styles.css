@@ -12,6 +12,39 @@ body {
   color: #333;
 }
 
+#intervals {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+
+.interval-item {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  background: #ddd;
+  color: #666;
+}
+
+.interval-item.rest {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.interval-item.active {
+  background: #007bff;
+  color: white;
+}
+
+.interval-item.completed {
+  background: #b3e5fc;
+  color: #0277bd;
+}
+
 input, button {
   font-size: 24px;
   padding: 10px 15px;

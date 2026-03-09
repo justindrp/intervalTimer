@@ -11,6 +11,42 @@ let timeLeft = 0;
 const timerDisplay = document.getElementById('timer');
 const intervalDurationsInput = document.getElementById('intervalDurationsInput');
 const restDurationInput = document.getElementById('restDuration');
+const intervalsContainer = document.getElementById('intervals');
+
+function renderIntervals() {
+  const inputs = readInputs();
+  if (!inputs) {
+    intervalsContainer.innerHTML = '';
+    return;
+  }
+
+  const items = [];
+  for (let i = 0; i < inputs.intervalDurations.length; i++) {
+    items.push({ type: 'interval', index: i + 1, duration: inputs.intervalDurations[i] });
+    if (inputs.restDuration > 0 && i < inputs.intervalDurations.length) {
+      items.push({ type: 'rest', duration: inputs.restDuration });
+    }
+  }
+
+  intervalsContainer.innerHTML = items.map((item, i) => {
+    const isActive = isRunning && !inRest && item.type === 'interval' && currentInterval === item.index - 1 ||
+                     isRunning && inRest && item.type === 'rest' && currentInterval === i - 1;
+    const isCompleted = isRunning && (
+      (!inRest && item.type === 'interval' && item.index - 1 < currentInterval) ||
+      (!inRest && item.type === 'rest' && currentInterval >= item.index) ||
+      (inRest && item.type === 'interval' && item.index - 1 <= currentInterval)
+    ) || (!isRunning && timeLeft === 0 && item.index - 1 < currentInterval);
+
+    const classes = ['interval-item'];
+    if (item.type === 'rest') classes.push('rest');
+    if (isActive) classes.push('active');
+    if (isCompleted) classes.push('completed');
+
+    const label = item.type === 'rest' ? 'Rest' : `${item.index}`;
+    const mins = Math.floor(item.duration / 60);
+    return `<span class="${classes.join(' ')}">${label}: ${mins}m</span>`;
+  }).join('');
+}
 
 function readInputs() {
   const rawDurations = intervalDurationsInput.value.split(',').map(s => parseFloat(s.trim()));
@@ -34,6 +70,7 @@ function updateTimerDisplay() {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  renderIntervals();
 }
 
 function speak(text) {
@@ -79,7 +116,10 @@ function startTimer() {
 
   countdown = setInterval(() => {
     timeLeft--;
-    updateTimerDisplay();
+updateTimerDisplay();
+
+intervalDurationsInput.addEventListener('input', renderIntervals);
+restDurationInput.addEventListener('input', renderIntervals);
 
     if (timeLeft === 0) {
       clearInterval(countdown);
