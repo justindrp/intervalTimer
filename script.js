@@ -7,46 +7,12 @@ let restDuration = 0;
 let currentInterval = 0;
 let inRest = false;
 let timeLeft = 0;
+let totalDuration = 0;
 
 const timerDisplay = document.getElementById('timer');
 const intervalDurationsInput = document.getElementById('intervalDurationsInput');
 const restDurationInput = document.getElementById('restDuration');
 const intervalsContainer = document.getElementById('intervals');
-
-function renderIntervals() {
-  const inputs = readInputs();
-  if (!inputs) {
-    intervalsContainer.innerHTML = '';
-    return;
-  }
-
-  const items = [];
-  for (let i = 0; i < inputs.intervalDurations.length; i++) {
-    items.push({ type: 'interval', index: i + 1, duration: inputs.intervalDurations[i] });
-    if (inputs.restDuration > 0 && i < inputs.intervalDurations.length) {
-      items.push({ type: 'rest', duration: inputs.restDuration });
-    }
-  }
-
-  intervalsContainer.innerHTML = items.map((item, i) => {
-    const isActive = isRunning && !inRest && item.type === 'interval' && currentInterval === item.index - 1 ||
-                     isRunning && inRest && item.type === 'rest' && currentInterval === i - 1;
-    const isCompleted = isRunning && (
-      (!inRest && item.type === 'interval' && item.index - 1 < currentInterval) ||
-      (!inRest && item.type === 'rest' && currentInterval >= item.index) ||
-      (inRest && item.type === 'interval' && item.index - 1 <= currentInterval)
-    ) || (!isRunning && timeLeft === 0 && item.index - 1 < currentInterval);
-
-    const classes = ['interval-item'];
-    if (item.type === 'rest') classes.push('rest');
-    if (isActive) classes.push('active');
-    if (isCompleted) classes.push('completed');
-
-    const label = item.type === 'rest' ? 'Rest' : `${item.index}`;
-    const mins = Math.floor(item.duration / 60);
-    return `<span class="${classes.join(' ')}">${label}: ${mins}m</span>`;
-  }).join('');
-}
 
 function readInputs() {
   const rawDurations = intervalDurationsInput.value.split(',').map(s => parseFloat(s.trim()));
@@ -64,6 +30,67 @@ function readInputs() {
     intervalDurations: rawDurations.map(d => d * 60),
     restDuration: newRest * 60
   };
+}
+
+function renderIntervals() {
+  const inputs = readInputs();
+  if (!inputs) {
+    intervalsContainer.innerHTML = '';
+    return;
+  }
+
+  const items = [];
+  for (let i = 0; i < inputs.intervalDurations.length; i++) {
+    items.push({ type: 'interval', index: i + 1, duration: inputs.intervalDurations[i] });
+    if (inputs.restDuration > 0 && i < inputs.intervalDurations.length - 1) {
+      items.push({ type: 'rest', duration: inputs.restDuration });
+    }
+  }
+
+  intervalsContainer.innerHTML = items.map((item, i) => {
+    let isActive = false;
+    let isCompleted = false;
+    let progress = 0;
+
+    if (isRunning) {
+      if (item.type === 'interval') {
+        if (!inRest) {
+          if (currentInterval === item.index - 1) {
+            isActive = true;
+            const total = item.duration;
+            progress = ((total - timeLeft) / total) * 100;
+          } else if (currentInterval > item.index - 1) {
+            isCompleted = true;
+          }
+        } else if (currentInterval >= item.index) {
+          isCompleted = true;
+        }
+      } else if (item.type === 'rest') {
+        if (inRest) {
+          const restIndex = items.slice(0, i).filter(x => x.type === 'interval').length;
+          if (currentInterval === restIndex) {
+            isActive = true;
+            const total = item.duration;
+            progress = ((total - timeLeft) / total) * 100;
+          } else if (currentInterval > restIndex) {
+            isCompleted = true;
+          }
+        }
+      }
+    }
+
+    const classes = ['interval-item'];
+    if (item.type === 'rest') classes.push('rest');
+    if (isActive) classes.push('active');
+    if (isCompleted) classes.push('completed');
+
+    const label = item.type === 'rest' ? 'Rest' : `${item.index}`;
+    const mins = Math.floor(item.duration / 60);
+
+    const progressBar = isActive ? `<div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>` : '';
+
+    return `<span class="${classes.join(' ')}">${label}: ${mins}m${progressBar}</span>`;
+  }).join('');
 }
 
 function updateTimerDisplay() {
@@ -111,15 +138,13 @@ function startTimer() {
     currentInterval = 0;
     inRest = false;
     timeLeft = intervalDurations[currentInterval];
+    totalDuration = timeLeft;
     speak(`Interval ${currentInterval + 1} started`);
   }
 
   countdown = setInterval(() => {
     timeLeft--;
-updateTimerDisplay();
-
-intervalDurationsInput.addEventListener('input', renderIntervals);
-restDurationInput.addEventListener('input', renderIntervals);
+    updateTimerDisplay();
 
     if (timeLeft === 0) {
       clearInterval(countdown);
@@ -128,6 +153,7 @@ restDurationInput.addEventListener('input', renderIntervals);
       if (!inRest && restDuration > 0) {
         inRest = true;
         timeLeft = restDuration;
+        totalDuration = timeLeft;
         speak('Rest time!');
         startTimer();
       } else {
@@ -135,6 +161,7 @@ restDurationInput.addEventListener('input', renderIntervals);
           currentInterval++;
           inRest = false;
           timeLeft = intervalDurations[currentInterval];
+          totalDuration = timeLeft;
           speak(`Interval ${currentInterval + 1} started`);
           startTimer();
         } else {
@@ -150,6 +177,7 @@ restDurationInput.addEventListener('input', renderIntervals);
 function pauseTimer() {
   clearInterval(countdown);
   isRunning = false;
+  renderIntervals();
 }
 
 function resetTimer() {
@@ -184,3 +212,6 @@ function testSpeech() {
 }
 
 updateTimerDisplay();
+
+intervalDurationsInput.addEventListener('input', renderIntervals);
+restDurationInput.addEventListener('input', renderIntervals);

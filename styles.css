@@ -28,6 +28,7 @@ body {
   font-weight: bold;
   background: #ddd;
   color: #666;
+  display: inline-block;
 }
 
 .interval-item.rest {
@@ -43,6 +44,20 @@ body {
 .interval-item.completed {
   background: #b3e5fc;
   color: #0277bd;
+}
+
+.interval-item .progress-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.interval-item .progress-fill {
+  height: 100%;
+  background: white;
+  transition: width 0.3s ease;
 }
 
 input, button {
