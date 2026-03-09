@@ -40,10 +40,12 @@ function renderIntervals() {
   }
 
   const items = [];
+  let restNumber = 0;
   for (let i = 0; i < inputs.intervalDurations.length; i++) {
     items.push({ type: 'interval', index: i + 1, duration: inputs.intervalDurations[i] });
     if (inputs.restDuration > 0 && i < inputs.intervalDurations.length - 1) {
-      items.push({ type: 'rest', duration: inputs.restDuration });
+      restNumber++;
+      items.push({ type: 'rest', restNumber, duration: inputs.restDuration });
     }
   }
 
@@ -67,14 +69,15 @@ function renderIntervals() {
         }
       } else if (item.type === 'rest') {
         if (inRest) {
-          const restIndex = items.slice(0, i).filter(x => x.type === 'interval').length;
-          if (currentInterval === restIndex) {
+          if (currentInterval === item.restNumber) {
             isActive = true;
             const total = item.duration;
             progress = ((total - timeLeft) / total) * 100;
-          } else if (currentInterval > restIndex) {
+          } else if (currentInterval > item.restNumber) {
             isCompleted = true;
           }
+        } else if (currentInterval > item.restNumber) {
+          isCompleted = true;
         }
       }
     }
