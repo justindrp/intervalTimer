@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Custom Interval Timer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <h1 id="timer">0:00</h1>
+
+  <div>
+    <input type="text" id="intervalDurationsInput" value="3,2,4" placeholder="Interval durations (min, comma-separated)">
+    <br>
+    <input type="number" id="restDuration" value="0" min="0" placeholder="Rest duration (minutes)">
+    <br><br>
+    
+    <button onclick="startTimer()">Start</button>
+    <button onclick="pauseTimer()">Pause</button>
+    <button onclick="resetTimer()">Reset</button>
+    <button onclick="editTimer()">Edit</button>
+    <button onclick="testSpeech()">Test Speech</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
