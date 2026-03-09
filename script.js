@@ -2,10 +2,8 @@ speechSynthesis.onvoiceschanged = () => {};
 
 let countdown;
 let isRunning = false;
-
-let intervalDurations = [180, 120, 240];
+let intervalDurations = [];
 let restDuration = 0;
-
 let currentInterval = 0;
 let inRest = false;
 let timeLeft = 0;
@@ -13,6 +11,24 @@ let timeLeft = 0;
 const timerDisplay = document.getElementById('timer');
 const intervalDurationsInput = document.getElementById('intervalDurationsInput');
 const restDurationInput = document.getElementById('restDuration');
+
+function readInputs() {
+  const rawDurations = intervalDurationsInput.value.split(',').map(s => parseFloat(s.trim()));
+  const newRest = parseFloat(restDurationInput.value);
+
+  if (
+    rawDurations.length === 0 ||
+    rawDurations.some(d => isNaN(d) || d <= 0) ||
+    isNaN(newRest) || newRest < 0
+  ) {
+    return null;
+  }
+
+  return {
+    intervalDurations: rawDurations.map(d => d * 60),
+    restDuration: newRest * 60
+  };
+}
 
 function updateTimerDisplay() {
   const minutes = Math.floor(timeLeft / 60);
@@ -42,6 +58,16 @@ function speak(text) {
 
 function startTimer() {
   if (isRunning) return;
+
+  const inputs = readInputs();
+  if (!inputs) {
+    alert("Please enter valid durations.");
+    return;
+  }
+
+  intervalDurations = inputs.intervalDurations;
+  restDuration = inputs.restDuration;
+
   isRunning = true;
 
   if (timeLeft === 0) {
@@ -95,21 +121,15 @@ function resetTimer() {
 }
 
 function editTimer() {
-  const rawDurations = intervalDurationsInput.value.split(',').map(s => parseFloat(s.trim()));
-  const newRest = parseFloat(restDurationInput.value);
-
-  if (
-    rawDurations.length === 0 ||
-    rawDurations.some(d => isNaN(d) || d <= 0) ||
-    isNaN(newRest) || newRest < 0
-  ) {
+  const inputs = readInputs();
+  if (!inputs) {
     alert("Please enter valid durations.");
     return;
   }
 
   pauseTimer();
-  intervalDurations = rawDurations.map(d => d * 60);
-  restDuration = newRest * 60;
+  intervalDurations = inputs.intervalDurations;
+  restDuration = inputs.restDuration;
   currentInterval = 0;
   inRest = false;
   timeLeft = 0;
