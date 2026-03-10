@@ -69,14 +69,14 @@ function renderIntervals() {
         }
       } else if (item.type === 'rest') {
         if (inRest) {
-          if (currentInterval === item.restNumber) {
+          if (currentInterval + 1 === item.restNumber) {
             isActive = true;
             const total = item.duration;
             progress = ((total - timeLeft) / total) * 100;
-          } else if (currentInterval > item.restNumber) {
+          } else if (currentInterval + 1 > item.restNumber) {
             isCompleted = true;
           }
-        } else if (currentInterval > item.restNumber) {
+        } else if (currentInterval >= item.restNumber) {
           isCompleted = true;
         }
       }
