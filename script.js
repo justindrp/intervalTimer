@@ -13,6 +13,15 @@ const timerDisplay = document.getElementById('timer');
 const intervalDurationsInput = document.getElementById('intervalDurationsInput');
 const restDurationInput = document.getElementById('restDuration');
 const intervalsContainer = document.getElementById('intervals');
+const startPauseBtn = document.getElementById('startPauseBtn');
+
+function toggleTimer() {
+  if (isRunning) {
+    pauseTimer();
+  } else {
+    startTimer();
+  }
+}
 
 function readInputs() {
   const rawDurations = intervalDurationsInput.value.split(',').map(s => parseFloat(s.trim()));
@@ -136,6 +145,7 @@ function startTimer() {
   restDuration = inputs.restDuration;
 
   isRunning = true;
+  startPauseBtn.textContent = 'Pause';
 
   if (timeLeft === 0) {
     currentInterval = 0;
@@ -180,6 +190,7 @@ function startTimer() {
 function pauseTimer() {
   clearInterval(countdown);
   isRunning = false;
+  startPauseBtn.textContent = 'Start';
   renderIntervals();
 }
 
@@ -188,6 +199,7 @@ function resetTimer() {
   currentInterval = 0;
   inRest = false;
   timeLeft = 0;
+  startPauseBtn.textContent = 'Start';
   updateTimerDisplay();
 }
 
